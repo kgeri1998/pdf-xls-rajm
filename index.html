@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="pdf-js/pdf.js"></script>
+    <script src="/excel-read/xlsx.full.min.js"></script>
+    <input onchange="getFile()" type="file" id="pdf">
+    <input onchange="getExcel()" type="file" id="excel">
+    <button onclick="writeExcel()">CREATE EXCEL</button>
+    <script>
+        // JS Script
+   pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf-js/worker.js';
+
+    async function getFile() {
+        let pdfinput = document.querySelector("#pdf"); // Reference to the PDF file input field
+       let file = pdfinput.files[0]
+        if (file != undefined && file.type == "application/pdf") {
+            let fr = new FileReader(); // Create a new FileReader object
+            fr.readAsDataURL(file); // Read the file as data URL
+            return await (fr.onload = async () =>  {
+                let res = fr.result;
+                 return (await extractText(res))
+
+            })
+        }
+    }
+    async function extractText(url) {
+        let download = document.querySelector(".download"); // Reference to the download link
+       
+        let alltext = [];
+        try {
+            let pdf;
+                pdf = await pdfjsLib.getDocument(url).promise; // Get the PDF document without password
+            let pages = pdf.numPages; // Get the total number of pages in the PDF
+            for (let i = 1; i <= pages; i++) {
+                let page = await pdf.getPage(i); // Get the page object for each page
+                let txt = await page.getTextContent(); // Get the text content of the page
+                let text = txt.items.map((s) => {if (s.str == ""){return "-n-"}else{return s.str}}).join("").split("-n-").join("\n"); // Concatenate the text items into a single string
+                alltext.push(text); // Add the extracted text to the array
+                
+            }
+        } catch (err) {
+            alert(err.message);
+        }
+        console.log("A file tartalma:")
+        console.log(alltext.map(line => line.split("\n")))
+        return alltext.map(line => line.split("\n"))
+    }
+    </script>
+    <script>
+        //Excel Script
+        async function getExcel(){
+            let excelinput = document.querySelector("#excel"); // Reference to the PDF file input field
+            let file = excelinput.files[0]
+            let output = []
+        if (file != undefined && file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+            let fr = new FileReader(); // Create a new FileReader object
+            fr.readAsBinaryString(file); // Read the file as data URL
+            fr.onload = (event) => {
+                let fileData = event.target.result;
+                let workbook = XLSX.read(
+                    fileData,
+                    { type: "binary" },
+                    { dateNF: "mm/dd/yyyy" }
+                );
+                workbook.SheetNames.forEach(async (sheet) => {
+                    const result = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], {
+                        header: 1,
+                        raw: false,
+                    });
+                    output.push(result)
+                    
+                });
+               
+            }
+            
+        }
+        console.log(output)
+        return output
+    }
+    
+    async function writeExcel(data){
+        var data = [
+    ["A1","B1"],
+    ["A2","B2"],
+  ];
+  const worksheet = XLSX.utils.aoa_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+  XLSX.writeFile(workbook, "File.xlsx", { compression: true });
+
+    }
+    </script>
+</body>
+</html>
