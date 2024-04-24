@@ -1,0 +1,30 @@
+Declare Function EHLLAPIQueryPresentationSpace Lib "ehlapi32.dll" (ByVal sessionId As Integer, ByVal buffer As String, ByVal bufferLength As Integer) As Integer
+
+Sub QueryPresentationSpace()
+    Dim sessionId As Integer
+    Dim bufferLength As Integer
+    Dim buffer As String
+    Dim result As Integer
+    
+    ' EHLLAPI munkamenet inicializálása és csatlakoztatása
+    ' sessionId = EhllapiInit()
+    ' sessionId = EhllapiConnect()
+    
+    ' EHLLAPIQueryPresentationSpace hívása
+    bufferLength = 1024 ' Példaként 1024 karakter hosszú buffer
+    buffer = Space(bufferLength) ' Inicializáljuk a buffer-t a megfelelő hosszúságú szóköz karakterekkel
+    result = EHLLAPIQueryPresentationSpace(sessionId, buffer, bufferLength)
+    
+    If result = 0 Then
+        ' Az ablaktartalom lekérdezése sikeres volt
+        ' Most a buffer változóban található az ablaktartalom
+        MsgBox "Az ablaktartalom: " & buffer
+    Else
+        ' Hiba történt az ablaktartalom lekérdezése közben
+        MsgBox "Hiba történt az ablaktartalom lekérdezése közben. Hibakód: " & result
+    End If
+    
+    ' EHLLAPI kapcsolat lezárása
+    ' EhllapiDisconnect(sessionId)
+    ' EhllapiTerminate()
+End Sub
